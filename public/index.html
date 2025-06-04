@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Tracker Pro | Seeds, Gear & Weather</title>
+    <meta name="description" content="Professional garden tracking system for seeds, gear, and weather monitoring">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Intro Animation -->
+    <div id="intro" class="intro-overlay">
+        <div class="intro-content">
+            <div class="logo-animation">
+                <div class="seed-icon">🌱</div>
+                <div class="ripple"></div>
+                <div class="ripple delay-1"></div>
+                <div class="ripple delay-2"></div>
+            </div>
+            <h1 class="intro-title">Garden Tracker Pro</h1>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p class="intro-subtitle">Loading your garden data...</p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🌱</span>
+                    <span class="logo-text">Garden Tracker Pro</span>
+                </div>
+                
+                <div class="header-actions">
+                    <button id="refreshBtn" class="refresh-btn" title="Refresh Data">
+                        <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="status-indicator">
+                        <div id="statusDot" class="status-dot online"></div>
+                        <span id="statusText" class="status-text">Online</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Weather Section -->
+        <section class="weather-section">
+            <div class="weather-card">
+                <div class="weather-header">
+                    <h2>🌤️ Current Weather</h2>
+                    <span id="weatherRarity" class="weather-rarity">Common</span>
+                </div>
+                
+                <div class="weather-content">
+                    <div class="weather-main">
+                        <div id="weatherIcon" class="weather-icon">☀️</div>
+                        <div class="weather-info">
+                            <h3 id="weatherType" class="weather-type">Sunny</h3>
+                            <p id="weatherDescription" class="weather-description">Perfect growing conditions</p>
+                        </div>
+                    </div>
+                    
+                    <div class="weather-details">
+                        <div class="weather-detail">
+                            <span class="detail-label">🎯 Bonuses:</span>
+                            <span id="cropBonuses" class="detail-value">None</span>
+                        </div>
+                        <div class="weather-detail">
+                            <span class="detail-label">🧬 Mutations:</span>
+                            <span id="mutations" class="detail-value">None</span>
+                        </div>
+                        <div class="weather-detail">
+                            <span class="detail-label">🕒 Updated:</span>
+                            <span id="lastUpdated" class="detail-value">Just now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Overview -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card seeds-stat">
+                    <div class="stat-icon">🌱</div>
+                    <div class="stat-content">
+                        <h3>Seeds</h3>
+                        <span id="seedsCount" class="stat-number">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card gear-stat">
+                    <div class="stat-icon">⚙️</div>
+                    <div class="stat-content">
+                        <h3>Gear</h3>
+                        <span id="gearCount" class="stat-number">0</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card eggs-stat">
+                    <div class="stat-icon">🥚</div>
+                    <div class="stat-content">
+                        <h3>Eggs</h3>
+                        <span id="eggsCount" class="stat-number">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Tables -->
+        <section class="data-section">
+            <div class="data-tabs">
+                <button class="tab-btn active" data-tab="seeds">🌱 Seeds</button>
+                <button class="tab-btn" data-tab="gear">⚙️ Gear</button>
+                <button class="tab-btn" data-tab="eggs">🥚 Eggs</button>
+            </div>
+
+            <div class="tab-content">
+                <div id="seedsTab" class="tab-panel active">
+                    <div class="table-container">
+                        <table id="seedsTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Rarity</th>
+                                    <th>Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="gearTab" class="tab-panel">
+                    <div class="table-container">
+                        <table id="gearTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Rarity</th>
+                                    <th>Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="eggsTab" class="tab-panel">
+                    <div class="table-container">
+                        <table id="eggsTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Rarity</th>
+                                    <th>Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>Made with ❤️ by <strong>Mart John</strong></p>
+                <p class="footer-subtitle">Professional Garden Tracking System</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
