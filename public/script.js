@@ -236,13 +236,45 @@ class GardenTracker {
       const nameCell = row.insertCell()
       nameCell.textContent = item.name || "Unknown"
 
-      // Type
+      // Type - Try to infer from name or use category
       const typeCell = row.insertCell()
-      typeCell.textContent = item.type || "Unknown"
+      let itemType = item.type || "Unknown"
 
-      // Rarity
+      // Infer type from item name for better categorization
+      if (type === "seeds") {
+        itemType = "Seed"
+      } else if (type === "gear") {
+        itemType = "Tool"
+      } else if (type === "eggs") {
+        if (item.name.toLowerCase().includes("common")) {
+          itemType = "Common"
+        } else if (item.name.toLowerCase().includes("rare")) {
+          itemType = "Rare"
+        } else if (item.name.toLowerCase().includes("epic")) {
+          itemType = "Epic"
+        } else {
+          itemType = "Egg"
+        }
+      }
+
+      typeCell.textContent = itemType
+
+      // Rarity - Infer from name if possible
       const rarityCell = row.insertCell()
-      const rarity = item.rarity || "common"
+      let rarity = item.rarity || "common"
+
+      // Try to infer rarity from item name
+      const itemName = item.name.toLowerCase()
+      if (itemName.includes("legendary")) {
+        rarity = "legendary"
+      } else if (itemName.includes("epic")) {
+        rarity = "epic"
+      } else if (itemName.includes("rare")) {
+        rarity = "rare"
+      } else if (itemName.includes("uncommon")) {
+        rarity = "uncommon"
+      }
+
       rarityCell.textContent = this.capitalizeFirst(rarity)
       rarityCell.className = `rarity-${rarity.toLowerCase()}`
 

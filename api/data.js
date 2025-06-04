@@ -30,10 +30,33 @@ async function fetchGardenData() {
       }),
     ])
 
+    // Parse seeds and gear arrays into structured objects
+    const parseItemArray = (items) => {
+      return items.map((item) => {
+        // Parse "Item Name x5" format
+        const match = item.match(/^(.+?)\s+x(\d+)$/)
+        if (match) {
+          return {
+            name: match[1].trim(),
+            type: "Unknown", // API doesn't provide type info
+            rarity: "common", // API doesn't provide rarity info
+            stock: Number.parseInt(match[2], 10),
+          }
+        }
+        // Fallback for items without quantity
+        return {
+          name: item,
+          type: "Unknown",
+          rarity: "common",
+          stock: 1,
+        }
+      })
+    }
+
     const gardenData = {
-      seeds: gearSeedsRes.data.seeds || [],
-      gear: gearSeedsRes.data.gear || [],
-      eggs: eggsRes.data.egg || [],
+      seeds: parseItemArray(gearSeedsRes.data.seeds || []),
+      gear: parseItemArray(gearSeedsRes.data.gear || []),
+      eggs: parseItemArray(eggsRes.data.egg || []),
       weather: {
         icon: weatherRes.data.icon || "☀️",
         description: weatherRes.data.description || "Clear skies",
