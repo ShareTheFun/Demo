@@ -13,6 +13,8 @@ class GardenTracker {
     }
     this.refreshInterval = null
     this.notificationShown = false
+    this.retryCount = 0
+    this.maxRetries = 3
 
     this.init()
   }
@@ -254,6 +256,7 @@ class GardenTracker {
   async refreshData() {
     const refreshBtn = document.getElementById("refreshBtn")
     refreshBtn.classList.add("spinning")
+    this.retryCount = 0
 
     try {
       await this.fetchData()
@@ -271,8 +274,9 @@ class GardenTracker {
       const response = await fetch("/api/data", {
         method: "GET",
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          Expires: "0",
         },
       })
 
@@ -280,7 +284,25 @@ class GardenTracker {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch (jsonError) {
+        console.error("Error parsing JSON response:", jsonError)
+
+        // Try to get the raw text and parse it manually
+        const rawText = await response.text()
+        console.log("Raw response text:", rawText)
+
+        try {
+          // Remove any "Pretty-print" prefix if present
+          const cleanJson = rawText.replace(/^Pretty-print\s+/, "")
+          data = JSON.parse(cleanJson)
+        } catch (parseError) {
+          throw new Error(`Failed to parse API response: ${parseError.message}`)
+        }
+      }
+
       console.log("Data received:", data)
 
       // Update version information
@@ -291,12 +313,27 @@ class GardenTracker {
 
       // Update UI
       this.updateUI()
+
+      // Reset retry count on success
+      this.retryCount = 0
     } catch (error) {
       console.error("Error fetching data:", error)
       this.updateConnectionStatus(false)
 
-      // Show error message to user
-      this.showErrorMessage("Failed to fetch garden data. Please try again.")
+      // Retry logic
+      if (this.retryCount < this.maxRetries) {
+        this.retryCount++
+        console.log(`Retrying (${this.retryCount}/${this.maxRetries})...`)
+
+        // Exponential backoff
+        const backoffTime = Math.pow(2, this.retryCount) * 1000
+        setTimeout(() => this.fetchData(), backoffTime)
+
+        this.showErrorMessage(`Connection issue. Retrying in ${backoffTime / 1000} seconds...`)
+      } else {
+        // Show error message to user after max retries
+        this.showErrorMessage("Failed to fetch garden data. Please try again later.")
+      }
     }
   }
 

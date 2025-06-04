@@ -1,18 +1,21 @@
 {
   "name": "garden-tracker-pro",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Professional garden tracking system for seeds, gear, and weather monitoring",
   "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Build complete'",
-    "start": "vercel dev"
+    "start": "node server-render.js",
+    "vercel-start": "vercel dev"
   },
-  "keywords": ["garden", "tracker", "seeds", "gear", "weather", "vercel", "serverless"],
+  "keywords": ["garden", "tracker", "seeds", "gear", "weather", "vercel", "serverless", "render"],
   "author": "Mart John",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.6.2"
+    "axios": "^1.6.2",
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
   },
   "engines": {
     "node": ">=18.0.0"

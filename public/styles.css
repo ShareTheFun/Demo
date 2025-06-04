@@ -446,6 +446,50 @@ body {
   color: var(--text-secondary);
 }
 
+/* Hosting badges */
+.hosting-badges {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.hosting-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hosting-badge::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.hosting-badge.vercel {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+.hosting-badge.vercel::before {
+  background: #000;
+}
+
+.hosting-badge.render {
+  background: rgba(70, 125, 255, 0.1);
+  color: #467dff;
+}
+
+.hosting-badge.render::before {
+  background: #467dff;
+}
+
 /* Weather Section */
 .weather-section {
   max-width: 1200px;

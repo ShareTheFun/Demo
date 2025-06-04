@@ -4,16 +4,24 @@ import axios from "axios"
 let cachedData = null
 let lastFetch = 0
 const CACHE_DURATION = 60000 // 60 seconds
-const APP_VERSION = "1.2.0" // Version tracking
+const APP_VERSION = "1.3.0" // Version tracking
 
 // Change log for notifications
 const CHANGE_LOG = [
   {
-    version: "1.2.0",
+    version: "1.3.0",
     date: "2023-06-04",
     changes: [
+      { type: "fix", text: "Fixed API data parsing for raw JSON text responses" },
+      { type: "add", text: "Added support for Render hosting platform" },
+      { type: "fix", text: "Improved error handling for API requests" },
+    ],
+  },
+  {
+    version: "1.2.0",
+    date: "2023-06-03",
+    changes: [
       { type: "add", text: "Added version tracking and change notifications" },
-      { type: "fix", text: "Fixed API data fetching issues" },
       { type: "add", text: "Enhanced animations and visual effects" },
       { type: "add", text: "Added copyright disclaimer" },
     ],
@@ -34,36 +42,54 @@ async function fetchGardenData() {
   try {
     console.log("Fetching garden data from APIs...")
 
-    // Use raw data URLs
+    // Use raw data URLs with text response type
     const [gearSeedsRes, eggsRes, weatherRes] = await Promise.all([
       axios.get("https://growagardenstock.com/api/stock?type=gear-seeds", {
         timeout: 8000,
+        responseType: "text",
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "User-Agent": "Garden-Tracker-Pro/1.2.0",
+          "User-Agent": "Garden-Tracker-Pro/1.3.0",
         },
-        responseType: "json",
       }),
       axios.get("https://growagardenstock.com/api/stock?type=egg", {
         timeout: 8000,
+        responseType: "text",
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "User-Agent": "Garden-Tracker-Pro/1.2.0",
+          "User-Agent": "Garden-Tracker-Pro/1.3.0",
         },
-        responseType: "json",
       }),
       axios.get("https://growagardenstock.com/api/stock/weather", {
         timeout: 8000,
+        responseType: "text",
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "User-Agent": "Garden-Tracker-Pro/1.2.0",
+          "User-Agent": "Garden-Tracker-Pro/1.3.0",
         },
-        responseType: "json",
       }),
     ])
+
+    // Parse raw JSON text responses
+    const parseRawJsonResponse = (response) => {
+      try {
+        if (typeof response.data === "string") {
+          // Remove any "Pretty-print" prefix if present
+          const cleanJson = response.data.replace(/^Pretty-print\s+/, "")
+          return JSON.parse(cleanJson)
+        }
+        return response.data
+      } catch (error) {
+        console.error("Error parsing JSON response:", error)
+        console.log("Raw response:", response.data)
+        return {}
+      }
+    }
+
+    const gearSeedsData = parseRawJsonResponse(gearSeedsRes)
+    const eggsData = parseRawJsonResponse(eggsRes)
+    const weatherData = parseRawJsonResponse(weatherRes)
+
+    console.log("Parsed gear/seeds data:", gearSeedsData)
+    console.log("Parsed eggs data:", eggsData)
+    console.log("Parsed weather data:", weatherData)
 
     // Parse seeds and gear arrays into structured objects
     const parseItemArray = (items) => {
@@ -103,15 +129,6 @@ async function fetchGardenData() {
       })
     }
 
-    // Safely extract data from responses
-    const gearSeedsData = gearSeedsRes.data || {}
-    const eggsData = eggsRes.data || {}
-    const weatherData = weatherRes.data || {}
-
-    console.log("Raw gear/seeds data:", gearSeedsData)
-    console.log("Raw eggs data:", eggsData)
-    console.log("Raw weather data:", weatherData)
-
     const gardenData = {
       seeds: parseItemArray(gearSeedsData.seeds || []),
       gear: parseItemArray(gearSeedsData.gear || []),
@@ -141,6 +158,10 @@ async function fetchGardenData() {
     return gardenData
   } catch (error) {
     console.error("Error fetching garden data:", error.message)
+    if (error.response) {
+      console.error("Response status:", error.response.status)
+      console.error("Response data:", error.response.data)
+    }
 
     // Return cached data with offline status if available
     if (cachedData) {
