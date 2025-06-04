@@ -8,8 +8,11 @@ class GardenTracker {
       weather: {},
       isOnline: false,
       lastUpdate: Date.now(),
+      version: "1.0.0",
+      changeLog: [],
     }
     this.refreshInterval = null
+    this.notificationShown = false
 
     this.init()
   }
@@ -18,6 +21,7 @@ class GardenTracker {
     this.setupIntro()
     this.setupEventListeners()
     this.setupTabs()
+    this.setupParticles()
     this.loadInitialData()
     this.startAutoRefresh()
   }
@@ -32,11 +36,118 @@ class GardenTracker {
     }, 5000)
   }
 
+  setupParticles() {
+    // Initialize particles.js
+    const particlesJS = window.particlesJS // Declare particlesJS variable
+    if (particlesJS) {
+      particlesJS("particles-js", {
+        particles: {
+          number: {
+            value: 30,
+            density: {
+              enable: true,
+              value_area: 800,
+            },
+          },
+          color: {
+            value: ["#10b981", "#3b82f6", "#f59e0b"],
+          },
+          shape: {
+            type: "circle",
+            stroke: {
+              width: 0,
+              color: "#000000",
+            },
+          },
+          opacity: {
+            value: 0.3,
+            random: true,
+            anim: {
+              enable: true,
+              speed: 1,
+              opacity_min: 0.1,
+              sync: false,
+            },
+          },
+          size: {
+            value: 5,
+            random: true,
+            anim: {
+              enable: true,
+              speed: 2,
+              size_min: 0.1,
+              sync: false,
+            },
+          },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#10b981",
+            opacity: 0.2,
+            width: 1,
+          },
+          move: {
+            enable: true,
+            speed: 1,
+            direction: "none",
+            random: true,
+            straight: false,
+            out_mode: "out",
+            bounce: false,
+            attract: {
+              enable: false,
+              rotateX: 600,
+              rotateY: 1200,
+            },
+          },
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: {
+              enable: true,
+              mode: "grab",
+            },
+            onclick: {
+              enable: true,
+              mode: "push",
+            },
+            resize: true,
+          },
+          modes: {
+            grab: {
+              distance: 140,
+              line_linked: {
+                opacity: 0.5,
+              },
+            },
+            push: {
+              particles_nb: 3,
+            },
+          },
+        },
+        retina_detect: true,
+      })
+    }
+  }
+
   setupEventListeners() {
     // Refresh button
     const refreshBtn = document.getElementById("refreshBtn")
     refreshBtn.addEventListener("click", () => {
       this.refreshData()
+    })
+
+    // Notification button
+    const notificationBtn = document.getElementById("notificationBtn")
+    notificationBtn.addEventListener("click", () => {
+      this.toggleNotificationPanel()
+    })
+
+    // Close notification button
+    const closeNotificationBtn = document.getElementById("close-notification")
+    closeNotificationBtn.addEventListener("click", () => {
+      this.hideNotificationPanel()
     })
 
     // Handle visibility change to pause/resume auto-refresh
@@ -48,6 +159,49 @@ class GardenTracker {
         this.refreshData() // Refresh when tab becomes visible
       }
     })
+
+    // Handle escape key to close notification panel
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.notificationShown) {
+        this.hideNotificationPanel()
+      }
+    })
+
+    // Close notification panel when clicking outside
+    document.addEventListener("click", (e) => {
+      const panel = document.getElementById("notification-panel")
+      const notificationBtn = document.getElementById("notificationBtn")
+
+      if (
+        this.notificationShown &&
+        !panel.contains(e.target) &&
+        e.target !== notificationBtn &&
+        !notificationBtn.contains(e.target)
+      ) {
+        this.hideNotificationPanel()
+      }
+    })
+  }
+
+  toggleNotificationPanel() {
+    const panel = document.getElementById("notification-panel")
+    if (panel.classList.contains("show")) {
+      this.hideNotificationPanel()
+    } else {
+      this.showNotificationPanel()
+    }
+  }
+
+  showNotificationPanel() {
+    const panel = document.getElementById("notification-panel")
+    panel.classList.add("show")
+    this.notificationShown = true
+  }
+
+  hideNotificationPanel() {
+    const panel = document.getElementById("notification-panel")
+    panel.classList.remove("show")
+    this.notificationShown = false
   }
 
   setupTabs() {
@@ -117,6 +271,7 @@ class GardenTracker {
       const response = await fetch("/api/data", {
         method: "GET",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
         },
       })
@@ -128,7 +283,13 @@ class GardenTracker {
       const data = await response.json()
       console.log("Data received:", data)
 
+      // Update version information
+      this.updateVersionInfo(data.version, this.data.version)
+
+      // Store the data
       this.data = data
+
+      // Update UI
       this.updateUI()
     } catch (error) {
       console.error("Error fetching data:", error)
@@ -137,6 +298,61 @@ class GardenTracker {
       // Show error message to user
       this.showErrorMessage("Failed to fetch garden data. Please try again.")
     }
+  }
+
+  updateVersionInfo(newVersion, oldVersion) {
+    // Update version display
+    document.getElementById("version-badge").textContent = `v${newVersion}`
+    document.getElementById("intro-version").textContent = `v${newVersion}`
+
+    // Check if version changed and show notification
+    if (newVersion !== oldVersion && oldVersion !== "1.0.0") {
+      this.showUpdateNotification(newVersion)
+    }
+
+    // Populate notification panel
+    this.populateNotificationPanel()
+  }
+
+  populateNotificationPanel() {
+    const notificationContent = document.getElementById("notification-content")
+    notificationContent.innerHTML = ""
+
+    if (!this.data.changeLog || !Array.isArray(this.data.changeLog)) {
+      notificationContent.innerHTML = "<p>No update history available.</p>"
+      return
+    }
+
+    this.data.changeLog.forEach((version) => {
+      const versionGroup = document.createElement("div")
+      versionGroup.className = "notification-group"
+
+      const versionHeader = document.createElement("div")
+      versionHeader.className = "notification-version"
+      versionHeader.innerHTML = `
+        <span>Version ${version.version}</span>
+        <span class="notification-date">${version.date}</span>
+      `
+      versionGroup.appendChild(versionHeader)
+
+      if (version.changes && Array.isArray(version.changes)) {
+        version.changes.forEach((change) => {
+          const changeItem = document.createElement("div")
+          changeItem.className = "notification-item"
+          changeItem.innerHTML = `
+            <span class="notification-badge ${change.type}">${change.type}</span>
+            <span class="notification-text">${change.text}</span>
+          `
+          versionGroup.appendChild(changeItem)
+        })
+      }
+
+      notificationContent.appendChild(versionGroup)
+    })
+  }
+
+  showUpdateNotification(version) {
+    this.showErrorMessage(`Updated to version ${version}! Click the bell icon to see what's new.`)
   }
 
   showErrorMessage(message) {
@@ -197,12 +413,20 @@ class GardenTracker {
     // Update last updated time
     const lastUpdated = this.data.lastUpdate ? this.formatTime(this.data.lastUpdate) : "Never"
     document.getElementById("lastUpdated").textContent = lastUpdated
+
+    // Add animation classes
+    document.getElementById("weatherIcon").classList.add("floating")
   }
 
   updateStatsSection() {
     document.getElementById("seedsCount").textContent = this.data.seeds?.length || 0
     document.getElementById("gearCount").textContent = this.data.gear?.length || 0
     document.getElementById("eggsCount").textContent = this.data.eggs?.length || 0
+
+    // Add animation to stats
+    document.querySelectorAll(".stat-number").forEach((el) => {
+      el.classList.add("glowing")
+    })
   }
 
   updateDataTables() {

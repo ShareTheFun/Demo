@@ -16,6 +16,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Particles Background -->
+    <div id="particles-js" class="particles-container"></div>
+
     <!-- Intro Animation -->
     <div id="intro" class="intro-overlay">
         <div class="intro-content">
@@ -24,12 +27,26 @@
                 <div class="ripple"></div>
                 <div class="ripple delay-1"></div>
                 <div class="ripple delay-2"></div>
+                <div class="ripple delay-3"></div>
+                <div class="ripple delay-4"></div>
             </div>
             <h1 class="intro-title">Garden Tracker Pro</h1>
             <div class="loading-bar">
                 <div class="loading-progress"></div>
             </div>
             <p class="intro-subtitle">Loading your garden data...</p>
+            <p class="intro-version" id="intro-version">v1.2.0</p>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div id="notification-panel" class="notification-panel">
+        <div class="notification-header">
+            <h3>What's New</h3>
+            <button id="close-notification" class="close-btn" aria-label="Close notifications">×</button>
+        </div>
+        <div class="notification-content" id="notification-content">
+            <!-- Notifications will be added here dynamically -->
         </div>
     </div>
 
@@ -41,9 +58,16 @@
                 <div class="logo">
                     <span class="logo-icon">🌱</span>
                     <span class="logo-text">Garden Tracker Pro</span>
+                    <span class="version-badge" id="version-badge">v1.2.0</span>
                 </div>
                 
                 <div class="header-actions">
+                    <button id="notificationBtn" class="notification-btn" title="What's New">
+                        <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </button>
                     <button id="refreshBtn" class="refresh-btn" title="Refresh Data">
                         <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
@@ -190,10 +214,14 @@
                 <p>Made with ❤️ by <strong>Mart John</strong></p>
                 <p class="footer-subtitle">Professional Garden Tracking System</p>
                 <p class="footer-subtitle">Hosted on Vercel</p>
+                <p class="copyright">© 2023 Garden Tracker Pro. All rights reserved. This application is for educational purposes only. 
+                All game data belongs to their respective owners. Garden Tracker Pro is not affiliated with, endorsed by, or sponsored by any game company.</p>
             </div>
         </footer>
     </div>
 
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

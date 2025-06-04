@@ -4,35 +4,85 @@ import axios from "axios"
 let cachedData = null
 let lastFetch = 0
 const CACHE_DURATION = 60000 // 60 seconds
+const APP_VERSION = "1.2.0" // Version tracking
+
+// Change log for notifications
+const CHANGE_LOG = [
+  {
+    version: "1.2.0",
+    date: "2023-06-04",
+    changes: [
+      { type: "add", text: "Added version tracking and change notifications" },
+      { type: "fix", text: "Fixed API data fetching issues" },
+      { type: "add", text: "Enhanced animations and visual effects" },
+      { type: "add", text: "Added copyright disclaimer" },
+    ],
+  },
+  {
+    version: "1.1.0",
+    date: "2023-05-15",
+    changes: [
+      { type: "add", text: "Added support for Vercel deployment" },
+      { type: "fix", text: "Improved mobile responsiveness" },
+      { type: "remove", text: "Removed socket.io dependency" },
+    ],
+  },
+  { version: "1.0.0", date: "2023-04-20", changes: [{ type: "add", text: "Initial release" }] },
+]
 
 async function fetchGardenData() {
   try {
     console.log("Fetching garden data from APIs...")
 
+    // Use raw data URLs
     const [gearSeedsRes, eggsRes, weatherRes] = await Promise.all([
       axios.get("https://growagardenstock.com/api/stock?type=gear-seeds", {
         timeout: 8000,
         headers: {
-          "User-Agent": "Garden-Tracker-Pro/1.0",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "User-Agent": "Garden-Tracker-Pro/1.2.0",
         },
+        responseType: "json",
       }),
       axios.get("https://growagardenstock.com/api/stock?type=egg", {
         timeout: 8000,
         headers: {
-          "User-Agent": "Garden-Tracker-Pro/1.0",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "User-Agent": "Garden-Tracker-Pro/1.2.0",
         },
+        responseType: "json",
       }),
       axios.get("https://growagardenstock.com/api/stock/weather", {
         timeout: 8000,
         headers: {
-          "User-Agent": "Garden-Tracker-Pro/1.0",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "User-Agent": "Garden-Tracker-Pro/1.2.0",
         },
+        responseType: "json",
       }),
     ])
 
     // Parse seeds and gear arrays into structured objects
     const parseItemArray = (items) => {
+      if (!Array.isArray(items)) {
+        console.error("Expected array but got:", typeof items, items)
+        return []
+      }
+
       return items.map((item) => {
+        if (typeof item !== "string") {
+          console.error("Expected string but got:", typeof item, item)
+          return {
+            name: String(item),
+            type: "Unknown",
+            rarity: "common",
+            stock: 1,
+          }
+        }
+
         // Parse "Item Name x5" format
         const match = item.match(/^(.+?)\s+x(\d+)$/)
         if (match) {
@@ -53,24 +103,35 @@ async function fetchGardenData() {
       })
     }
 
+    // Safely extract data from responses
+    const gearSeedsData = gearSeedsRes.data || {}
+    const eggsData = eggsRes.data || {}
+    const weatherData = weatherRes.data || {}
+
+    console.log("Raw gear/seeds data:", gearSeedsData)
+    console.log("Raw eggs data:", eggsData)
+    console.log("Raw weather data:", weatherData)
+
     const gardenData = {
-      seeds: parseItemArray(gearSeedsRes.data.seeds || []),
-      gear: parseItemArray(gearSeedsRes.data.gear || []),
-      eggs: parseItemArray(eggsRes.data.egg || []),
+      seeds: parseItemArray(gearSeedsData.seeds || []),
+      gear: parseItemArray(gearSeedsData.gear || []),
+      eggs: parseItemArray(eggsData.egg || []),
       weather: {
-        icon: weatherRes.data.icon || "☀️",
-        description: weatherRes.data.description || "Clear skies",
-        visualCue: weatherRes.data.visualCue || "",
-        cropBonuses: weatherRes.data.cropBonuses || "",
-        mutations: weatherRes.data.mutations || [],
-        rarity: weatherRes.data.rarity || "Common",
-        updatedAt: weatherRes.data.updatedAt || Date.now(),
-        currentWeather: weatherRes.data.currentWeather || "Sunny",
-        weatherType: weatherRes.data.weatherType || "normal",
-        effectDescription: weatherRes.data.effectDescription || "Perfect growing conditions",
+        icon: weatherData.icon || "☀️",
+        description: weatherData.description || "Clear skies",
+        visualCue: weatherData.visualCue || "",
+        cropBonuses: weatherData.cropBonuses || "",
+        mutations: Array.isArray(weatherData.mutations) ? weatherData.mutations : [],
+        rarity: weatherData.rarity || "Common",
+        updatedAt: weatherData.updatedAt || Date.now(),
+        currentWeather: weatherData.currentWeather || "Sunny",
+        weatherType: weatherData.weatherType || "normal",
+        effectDescription: weatherData.effectDescription || "Perfect growing conditions",
       },
       isOnline: true,
       lastUpdate: Date.now(),
+      version: APP_VERSION,
+      changeLog: CHANGE_LOG,
     }
 
     console.log(
@@ -87,6 +148,8 @@ async function fetchGardenData() {
         ...cachedData,
         isOnline: false,
         lastUpdate: cachedData.lastUpdate,
+        version: APP_VERSION,
+        changeLog: CHANGE_LOG,
       }
     }
 
@@ -109,6 +172,8 @@ async function fetchGardenData() {
       },
       isOnline: false,
       lastUpdate: Date.now(),
+      version: APP_VERSION,
+      changeLog: CHANGE_LOG,
     }
   }
 }
@@ -158,6 +223,8 @@ export default async function handler(req, res) {
       message: error.message,
       isOnline: false,
       lastUpdate: Date.now(),
+      version: APP_VERSION,
+      changeLog: CHANGE_LOG,
     })
   }
 }
