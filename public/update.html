@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Tracker Pro - Update Center</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="update-styles.css">
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="background-animation">
+        <div class="floating-icon">🔄</div>
+        <div class="floating-icon">⚡</div>
+        <div class="floating-icon">🚀</div>
+        <div class="floating-icon">💻</div>
+        <div class="floating-icon">🌱</div>
+    </div>
+
+    <div class="update-container">
+        <!-- Header -->
+        <header class="update-header">
+            <div class="logo">
+                <span class="logo-icon">🔄</span>
+                <span class="logo-text">Update Center</span>
+            </div>
+            <a href="/" class="back-btn">← Back to Garden Tracker</a>
+        </header>
+
+        <!-- Main Content -->
+        <main class="update-main">
+            <!-- Loading State -->
+            <div id="loading-state" class="update-card loading-card">
+                <div class="loading-spinner"></div>
+                <h2>Checking for updates...</h2>
+                <p>Please wait while we check the latest version</p>
+            </div>
+
+            <!-- Update Info -->
+            <div id="update-info" class="update-card" style="display: none;">
+                <div class="card-header">
+                    <h2>🔍 Update Information</h2>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-section">
+                        <h3>📊 Current Status</h3>
+                        <div class="status-item">
+                            <span class="label">Current Version:</span>
+                            <span id="current-version" class="value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Latest Version:</span>
+                            <span id="latest-version" class="value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Update Available:</span>
+                            <span id="update-status" class="value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>🏠 Hosting Information</h3>
+                        <div class="status-item">
+                            <span class="label">Platform:</span>
+                            <span id="hosting-platform" class="value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Region:</span>
+                            <span id="hosting-region" class="value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Environment:</span>
+                            <span id="hosting-environment" class="value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>📝 Latest Commit</h3>
+                        <div class="commit-info" id="commit-info">
+                            <div class="commit-message" id="commit-message">-</div>
+                            <div class="commit-meta">
+                                <span id="commit-author">-</span> • 
+                                <span id="commit-date">-</span> • 
+                                <a id="commit-link" href="#" target="_blank">View on GitHub</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bot Verification -->
+                <div id="bot-verification" class="bot-verification" style="display: none;">
+                    <h3>🤖 Bot Verification</h3>
+                    <p>Please answer this question to verify you're human:</p>
+                    <div class="challenge-question" id="challenge-question">-</div>
+                    <input type="text" id="challenge-answer" placeholder="Your answer..." class="challenge-input">
+                    <button id="verify-btn" class="verify-btn">Verify</button>
+                    <div id="verification-result" class="verification-result"></div>
+                </div>
+
+                <!-- Update Actions -->
+                <div class="update-actions">
+                    <button id="check-updates-btn" class="action-btn secondary">🔄 Check Again</button>
+                    <button id="start-update-btn" class="action-btn primary" style="display: none;">🚀 Start Update</button>
+                </div>
+            </div>
+
+            <!-- Update Confirmation -->
+            <div id="update-confirmation" class="update-card confirmation-card" style="display: none;">
+                <div class="confirmation-icon">⚠️</div>
+                <h2>Update Confirmation</h2>
+                <p id="confirmation-message">Found update v1.2.0. Do you want to update the site?</p>
+                <div class="confirmation-actions">
+                    <button id="cancel-update-btn" class="action-btn secondary">Cancel</button>
+                    <button id="confirm-update-btn" class="action-btn primary">Yes, Update Now</button>
+                </div>
+            </div>
+
+            <!-- Update Progress -->
+            <div id="update-progress" class="update-card progress-card" style="display: none;">
+                <div class="progress-header">
+                    <h2>🚀 Updating Garden Tracker Pro</h2>
+                    <p>Please don't close this window during the update process</p>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="progress-percentage" class="progress-percentage">0%</div>
+                </div>
+                
+                <div class="progress-steps">
+                    <div id="progress-step" class="progress-step">Initializing update...</div>
+                </div>
+                
+                <div class="progress-animation">
+                    <div class="rocket">🚀</div>
+                    <div class="trail"></div>
+                </div>
+            </div>
+
+            <!-- Update Success -->
+            <div id="update-success" class="update-card success-card" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2>Update Successful!</h2>
+                <p id="success-message">Successfully updated from v1.1.0 to v1.2.0</p>
+                <div class="success-countdown">
+                    <p>Redirecting to the updated site in <span id="countdown">5</span> seconds...</p>
+                </div>
+                <button id="redirect-now-btn" class="action-btn primary">Go to Updated Site Now</button>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="update-card error-card" style="display: none;">
+                <div class="error-icon">❌</div>
+                <h2>Update Failed</h2>
+                <p id="error-message">An error occurred during the update process</p>
+                <div class="error-actions">
+                    <button id="retry-btn" class="action-btn primary">Try Again</button>
+                    <button id="back-to-site-btn" class="action-btn secondary">Back to Site</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="update-script.js"></script>
+</body>
+</html>

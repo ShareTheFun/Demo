@@ -183,6 +183,12 @@ class GardenTracker {
         this.hideNotificationPanel()
       }
     })
+
+    // Update button
+    const updateBtn = document.getElementById("updateBtn")
+    updateBtn.addEventListener("click", () => {
+      window.location.href = "/update.html"
+    })
   }
 
   toggleNotificationPanel() {

@@ -328,6 +328,36 @@ body {
   border: 2px solid white;
 }
 
+/* Update Button */
+.update-btn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.update-btn:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.update-btn:active {
+  transform: translateY(0);
+}
+
+.update-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
 /* App Container */
 .app-container {
   opacity: 0;
