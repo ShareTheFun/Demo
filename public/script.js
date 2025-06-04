@@ -1,9 +1,5 @@
-// Import the io function from socket.io-client
-import { io } from "socket.io-client"
-
 class GardenTracker {
   constructor() {
-    this.socket = io()
     this.currentTab = "seeds"
     this.data = {
       seeds: [],
@@ -13,15 +9,17 @@ class GardenTracker {
       isOnline: false,
       lastUpdate: Date.now(),
     }
+    this.refreshInterval = null
 
     this.init()
   }
 
   init() {
     this.setupIntro()
-    this.setupSocketListeners()
     this.setupEventListeners()
     this.setupTabs()
+    this.loadInitialData()
+    this.startAutoRefresh()
   }
 
   setupIntro() {
@@ -34,24 +32,6 @@ class GardenTracker {
     }, 5000)
   }
 
-  setupSocketListeners() {
-    this.socket.on("connect", () => {
-      console.log("Connected to server")
-      this.updateConnectionStatus(true)
-    })
-
-    this.socket.on("disconnect", () => {
-      console.log("Disconnected from server")
-      this.updateConnectionStatus(false)
-    })
-
-    this.socket.on("update", (data) => {
-      console.log("Received data update:", data)
-      this.data = data
-      this.updateUI()
-    })
-  }
-
   setupEventListeners() {
     // Refresh button
     const refreshBtn = document.getElementById("refreshBtn")
@@ -59,10 +39,15 @@ class GardenTracker {
       this.refreshData()
     })
 
-    // Auto-refresh every 60 seconds
-    setInterval(() => {
-      this.refreshData()
-    }, 60000)
+    // Handle visibility change to pause/resume auto-refresh
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        this.stopAutoRefresh()
+      } else {
+        this.startAutoRefresh()
+        this.refreshData() // Refresh when tab becomes visible
+      }
+    })
   }
 
   setupTabs() {
@@ -91,15 +76,86 @@ class GardenTracker {
     this.currentTab = tabName
   }
 
-  refreshData() {
+  async loadInitialData() {
+    await this.fetchData()
+  }
+
+  startAutoRefresh() {
+    // Clear existing interval
+    this.stopAutoRefresh()
+
+    // Refresh every 60 seconds
+    this.refreshInterval = setInterval(() => {
+      this.refreshData()
+    }, 60000)
+  }
+
+  stopAutoRefresh() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval)
+      this.refreshInterval = null
+    }
+  }
+
+  async refreshData() {
     const refreshBtn = document.getElementById("refreshBtn")
     refreshBtn.classList.add("spinning")
 
-    this.socket.emit("refresh")
+    try {
+      await this.fetchData()
+    } finally {
+      setTimeout(() => {
+        refreshBtn.classList.remove("spinning")
+      }, 1000)
+    }
+  }
 
+  async fetchData() {
+    try {
+      console.log("Fetching data from API...")
+
+      const response = await fetch("/api/data", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("Data received:", data)
+
+      this.data = data
+      this.updateUI()
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      this.updateConnectionStatus(false)
+
+      // Show error message to user
+      this.showErrorMessage("Failed to fetch garden data. Please try again.")
+    }
+  }
+
+  showErrorMessage(message) {
+    // Create or update error notification
+    let errorDiv = document.getElementById("error-notification")
+    if (!errorDiv) {
+      errorDiv = document.createElement("div")
+      errorDiv.id = "error-notification"
+      errorDiv.className = "error-notification"
+      document.body.appendChild(errorDiv)
+    }
+
+    errorDiv.textContent = message
+    errorDiv.style.display = "block"
+
+    // Hide after 5 seconds
     setTimeout(() => {
-      refreshBtn.classList.remove("spinning")
-    }, 1000)
+      errorDiv.style.display = "none"
+    }, 5000)
   }
 
   updateConnectionStatus(isOnline) {
@@ -260,17 +316,3 @@ document.addEventListener("keydown", (e) => {
     tabs[nextIndex].click()
   }
 })
-
-// Service Worker for offline functionality (optional)
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        console.log("SW registered: ", registration)
-      })
-      .catch((registrationError) => {
-        console.log("SW registration failed: ", registrationError)
-      })
-  })
-}
